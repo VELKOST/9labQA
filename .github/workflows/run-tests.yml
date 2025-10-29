@@ -9,9 +9,8 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        python-version: ["3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout
@@ -22,6 +21,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+          # НЕ пишите 'or' в одной строке. Нужен список:
+          cache-dependency-path: |
+            **/requirements.txt
+            **/pyproject.toml
 
       - name: Install dependencies
         run: |
@@ -33,15 +36,4 @@ jobs:
           fi
 
       - name: Run pytest
-        run: |
-          pytest -q --maxfail=1 --disable-warnings --junitxml=pytest-report.xml
-
-      - name: Upload test artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-${{ matrix.python-version }}
-          path: |
-            pytest-report.xml
-            .pytest_cache
-          if-no-files-found: ignore
+        run: pytest -q --maxfail=1 --disable-warnings
